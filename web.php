@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PesertaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TiketController;
 
 // Halaman login untuk pengguna yang belum login.
 Route::middleware('guest')->group(function () {
@@ -16,6 +17,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::redirect('/', '/peserta');
 
+    // === FITUR PESERTA (ANGGOTA TIM) ===
     // Admin dan Petugas: lihat, tambah, dan ubah.
     // Tidak mendaftarkan destroy dan show.
     Route::resource('peserta', PesertaController::class)
@@ -29,6 +31,18 @@ Route::middleware('auth')->group(function () {
     ])
         ->middleware('role:admin')
         ->name('peserta.destroy');
+
+    // === FITUR TIKET & KATEGORI (REVALDI) ===
+    // Admin dan Petugas: kelola dan simpan tiket.
+    Route::middleware('role:admin,petugas')->group(function () {
+        Route::get('/kelola-tiket', [TiketController::class, 'kelolaTiket'])->name('tiket.kelola');
+        Route::post('/simpan-tiket', [TiketController::class, 'store'])->name('tiket.store');
+    });
+
+    // Hanya Admin yang boleh menghapus tiket.
+    Route::delete('/hapus-tiket/{id}', [TiketController::class, 'destroy'])
+        ->middleware('role:admin')
+        ->name('tiket.destroy');
 
     Route::post('/logout', [AuthController::class, 'logout'])
         ->name('logout');
